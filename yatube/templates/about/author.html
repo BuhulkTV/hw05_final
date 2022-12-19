@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %} 
+{% block title %}Об авторе проекта{% endblock %}
+{% block content %}
+<h1>Привет, я автор</h1>
+<div class="container py-2 col-12 col-md-5">
+  <p>
+    Меня зовут Уханов Кирилл Игоревич. Я являюсь студентом Яндекс.Практикум.
+    <div class="container py-2 col-12 col-md-7">
+      <img src="{% static 'img/My_photo.jpg' %}" width="300" height="430"
+       class="d-inline-block align-top" alt=""></div>
+    Мне 25 лет. Я совмещаю учебу с работой. Живу с девушкой. Есть кошка, ей 3 года. 
+  </p>
+  <p>
+    Учеба дается нелегко, но я стараюсь и имею некие успехи.
+  </p>
+</div>
+<div class="container py-2 col-12 col-md-5">
+  <span>Мои ссылки</span>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item">
+      <a href="https://vk.com/uhann">Ссылка на VK</a>
+    </li>
+    <li class="list-group-item">
+      <a href="https://github.com/BuhulkTV">Ссылка на GitHub</a>
+    </li>
+    <li class="list-group-item">
+        <a href="https://t.me/Kiruhanov">Ссылка на Telegram</a>
+    </li>
+  </ul>
+</div>
+{% endblock %}
