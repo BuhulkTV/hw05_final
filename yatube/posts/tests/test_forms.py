@@ -185,7 +185,8 @@ class TestFollow(TestCase):
             data=form_data,
             follow=True,
         )
-        self.assertIs(Follow.objects.filter(
+        self.assertIs(
+            Follow.objects.filter(
                 user=self.user_followed, author=self.user_following_one
             ).exists(),
             True
