@@ -66,19 +66,19 @@ class StaticURLTests(TestCase):
         for url in self.url_public_names:
             with self.subTest(url=url):
                 response = self.guest_client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK.value)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_exists_at_desired_location_authorized(self):
         """URL-адреса доступны залогиненному пользователю"""
         for url in self.url_private_names:
             with self.subTest(url=url):
                 response = self.authorized_client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK.value)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_unexisting_page_url_exists_at_desired_location(self):
         """Страница /group/ не существует, возврат ошибки 404"""
         response = self.guest_client.get('/group/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND.value)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertTemplateUsed(response, 'core/404.html')
 
     def test_url_redirect_anonymous_on_auth_login(self):

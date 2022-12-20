@@ -34,7 +34,7 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     template = 'posts/group_list.html'
-    post_list = group.posts.all()
+    post_list = group.posts.select_related('group').all()
     is_group = True
     context = {
         'group': group,
@@ -107,7 +107,7 @@ def post_edit(request, post_id):
         instance=post,
     )
     if form.is_valid():
-        post = form.save(commit=False)
+        post = form.save()
         post.author = request.user
         post.save()
         return redirect('posts:post_detail', post.pk)
@@ -137,7 +137,9 @@ def follow_index(request):
     template = 'posts/follow.html'
     user = request.user
     authors = user.follower.values_list('author', flat=True)
-    post_list = Post.objects.filter(author__id__in=authors)
+    post_list = Post.objects.select_related('author').filter(
+        author__id__in=authors
+    )
     context = {
         'title': title,
     }

@@ -5,8 +5,9 @@ from django.test import Client, TestCase, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 from django.urls import reverse
+from django.core.cache import cache
 
-from ..models import Group, Post, User, Comment, Follow
+from ..models import Group, Post, User, Comment
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -34,6 +35,7 @@ class PostCreateFormTests(TestCase):
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
+        cache.clear()
         self.authorized_client = Client()
         self.authorized_client.force_login(PostCreateFormTests.user)
 
@@ -144,98 +146,3 @@ class CommentFormTest(TestCase):
         comment_response = Comment.objects.latest('created')
         self.assertEqual(Comment.objects.count(), comment_count + 1)
         self.assertEqual(comment_response.text, form_data['text'])
-
-
-class TestFollow(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user_following_one = User.objects.create_user(username='auth')
-        cls.user_following_two = User.objects.create_user(
-            username='following_two'
-        )
-        cls.user_followed = User.objects.create_user(username='user_followed')
-
-        cls.post_following_one = Post.objects.create(
-            author=cls.user_following_one,
-            text='Тестовый пост первого автора',
-        )
-        cls.post_following_two = Post.objects.create(
-            author=cls.user_following_two,
-            text='Тестовый пост второго автора',
-        )
-
-    def setUp(self):
-        self.authorized_client_one = Client()
-        self.authorized_client_one.force_login(self.user_followed)
-        self.authorized_client_two = Client()
-        self.authorized_client_two.force_login(self.user_following_one)
-
-    def test_follow(self):
-        """Авторизованный пользователь может подписываться на других
-        пользователей и удалять их из подписок.
-        """
-        form_data = {
-            'username': self.user_followed,
-        }
-        self.authorized_client_one.post(
-            reverse('posts:profile_follow', kwargs={
-                'username': self.user_following_one.username
-            }),
-            data=form_data,
-            follow=True,
-        )
-        self.assertIs(
-            Follow.objects.filter(
-                user=self.user_followed, author=self.user_following_one
-            ).exists(),
-            True
-        )
-        self.authorized_client_one.post(
-            reverse('posts:profile_unfollow', kwargs={
-                'username': self.user_following_one.username
-            }),
-            data=form_data,
-            follow=True,
-        )
-        self.assertIs(
-            Follow.objects.filter(
-                user=self.user_followed, author=self.user_following_one
-            ).exists(),
-            False
-        )
-
-    def test_new_post_in_follow(self):
-        """Новая запись пользователя появляется в ленте тех,
-           кто на него подписан и не появляется в ленте тех,
-           кто не подписан.
-        """
-        Follow.objects.create(
-            user=self.user_followed, author=self.user_following_one
-        )
-        post = Post.objects.create(
-            author=self.user_following_one,
-            text='Новый тестовый пост первого автора',
-        )
-        response = self.authorized_client_one.get(
-            reverse(
-                'posts:follow_index',
-            )
-        )
-        response = self.authorized_client_two.get(
-            reverse(
-                'posts:follow_index',
-            )
-        )
-        self.assertNotIn(post, response.context['page_obj'].object_list)
-
-    def test_follow_count(self):
-        """Подписаться на автора можно только один раз"""
-        Follow.objects.create(
-            user=self.user_followed, author=self.user_following_one
-        )
-        follow_counts = self.user_followed.follower.count()
-        Follow.objects.get_or_create(
-            user=self.user_followed, author=self.user_following_one
-        )
-        self.assertEqual(self.user_followed.follower.count(), follow_counts)
