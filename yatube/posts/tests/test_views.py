@@ -357,7 +357,7 @@ class TestFollow(TestCase):
 
     def test_follow(self):
         """Авторизованный пользователь может подписываться на других
-        пользователей и удалять их из подписок.
+        пользователей
         """
         form_data = {
             'username': self.user_followed,
@@ -374,6 +374,17 @@ class TestFollow(TestCase):
                 user=self.user_followed, author=self.user_following_one
             ).exists(),
             True
+        )
+
+    def test_unfollow(self):
+        """Авторизованный пользователь может удалять избранных
+        авторов из подписок.
+        """
+        form_data = {
+            'username': self.user_followed,
+        }
+        Follow.objects.create(
+            user=self.user_followed, author=self.user_following_one
         )
         self.authorized_client_one.post(
             reverse('posts:profile_unfollow', kwargs={

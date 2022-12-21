@@ -34,7 +34,7 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     template = 'posts/group_list.html'
-    post_list = group.posts.select_related('group').all()
+    post_list = group.posts.select_related('author').all()
     is_group = True
     context = {
         'group': group,
@@ -47,7 +47,7 @@ def group_posts(request, slug):
 def profile(request, username):
     template = 'posts/profile.html'
     author = get_object_or_404(User, username=username)
-    post_list = author.posts.all()
+    post_list = author.posts.select_related('group').all()
     posts_count = author.posts.count()
     user = request.user
     following = user.is_authenticated and author.following.exists()
@@ -64,9 +64,9 @@ def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     template = 'posts/post_detail.html'
     author = post.author
-    posts_count = author.posts.select_related('author').count()
+    posts_count = author.posts.count()
     comment_form = CommentForm(request.POST or None)
-    comments = post.comments.all()
+    comments = post.comments.select_related('author').all()
     context = {
         'post': post,
         'posts_count': posts_count,
@@ -108,7 +108,6 @@ def post_edit(request, post_id):
     )
     if form.is_valid():
         post = form.save()
-        post.author = request.user
         post.save()
         return redirect('posts:post_detail', post.pk)
     context = {
